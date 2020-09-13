@@ -1,0 +1,57 @@
+﻿@page "/"
+@using Data;
+@using Newtonsoft.Json;
+
+    <div className="main-container">
+        <input type="text" className="search" placeholder="Pesquisa" @bind-value="@query" @bind-value:event="oninput" @onkeyup=@(async () => await PesquisarTempo()) />
+        @if (resultado != null && resultado.cod == 200)
+        {
+            <p>@resultado.name</p>
+            <sup>@resultado.sys.country</sup>
+            <p>@Math.Round(resultado.main.temp)</p>
+            <img className="city-icon" src="@(imgSrc)" alt="@(resultado.weather[0].description)" />
+            <p>@resultado.weather[0].description</p>
+        } else
+        {
+            <p></p>
+        }
+        @* {weather.main && (
+            <div className="city">
+                <h2 className="city-name">
+                    <span>{weather.name}</span>
+                    <sup>{weather.sys.country}</sup>
+                </h2>
+                <div className="city-temp">
+                    {Math.round(weather.main.temp)}
+                    <sup>&deg;C</sup>
+                </div>
+                <div className="info">
+                    <img className="city-icon" src={`https://openweathermap.org/img/wn/${weather.weather[0].icon}@2x.png`} alt={weather.weather[0].description} />
+                    <p>{weather.weather[0].description}</p>
+                </div>
+            </div>
+        )} *@
+    </div>
+
+@code {
+    string query;
+    ClimaTempo resultado;
+    string imgSrc;
+
+    private async Task PesquisarTempo()
+    {
+        string url = $"https://api.openweathermap.org/data/2.5/weather?q={query}&units=metric&APPID=43b05d094e96d44927b25b795cc9359f";
+
+        using (var cliente = new HttpClient())
+        {
+            HttpResponseMessage responseMessage = await cliente.GetAsync(url);
+
+            resultado = JsonConvert.DeserializeObject<ClimaTempo>(await responseMessage.Content.ReadAsStringAsync());
+
+            if (resultado.cod == 200)
+            {
+                imgSrc = $"https://openweathermap.org/img/wn/{@resultado.weather[0].icon}@2x.png";
+            }
+        }
+    }
+}
